@@ -1,0 +1,28 @@
+#version: "3.8"
+services:
+  api:
+    build: .
+    container_name: notification_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - SERVICE_TYPE=api
+      - SMTP_USER=parthibahazra@gmail.com
+      - SMTP_PASSWORD=
+    command: uvicorn notification_service:app --host 0.0.0.0 --port 8000
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # RabbitMQ management UI
+
+  worker:
+    build: .
+    container_name: celery_worker
+    depends_on:
+      - rabbitmq
+    command: celery -A tasks worker --loglevel=info
